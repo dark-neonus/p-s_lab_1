@@ -100,6 +100,9 @@ library(tidytext)
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(tm)
+library(stringr)
+library(tidyverse)
 ```
 
 ## Outline of the work
@@ -142,12 +145,12 @@ library(ggplot2)
 
 ```{r}
 list.files(getwd())
-list.files("data/0-authors")
+list.files("2-fake_news")
 ```
 
 ```{r}
-test_path <- "data/0-authors/test.csv"
-train_path <- "data/0-authors/train.csv"
+test_path <- "2-fake_news/test.csv"
+train_path <- "2-fake_news/train.csv"
 
 stop_words <- read_file("stop_words.txt")
 # https://stackoverflow.com/questions/27195912/why-does-strsplit-return-a-list
