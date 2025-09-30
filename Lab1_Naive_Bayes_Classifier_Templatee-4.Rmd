@@ -176,6 +176,7 @@ visualization. Show what are the most common words for negative and
 positive examples as a histogram, word cloud etc. Be creative!
 
 ```{r}
+stop_words <- splitted_stop_words
 visualize_wordcloud <- function(data, class_name, stop_words) {
   text_vector <- data$Body[data$Label == class_name]
   
