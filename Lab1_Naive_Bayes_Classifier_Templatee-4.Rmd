@@ -161,11 +161,46 @@ test <-  read.csv(file = test_path, stringsAsFactors = FALSE)
 ```
 
 ```{r}
-# note the power functional features of R bring us! 
-tidy_text <- unnest_tokens(train, 'splitted', 'text', token="words") %>%
-             filter(!splitted %in% stop_words)
+clean_text <- function(text) {
+  text %>%
+    tolower() %>%
+    str_replace_all("[[:punct:]]", " ") %>%
+    str_replace_all("[[:digit:]]", " ") %>%
+    str_replace_all("\\s+", " ") %>%
+    str_trim()
+}
+train[["cleaned_text"]] <- sapply(train[["Body"]], clean_text)
+test[["cleaned_text"]]  <- sapply(test[["Body"]], clean_text)
 
-tidy_text %>% count(splitted,sort=TRUE)
+
+tidy_train <- train %>%
+  mutate(doc_id = row_number()) %>%
+  unnest_tokens(word, cleaned_text, token = "words") %>%
+  filter(!word %in% splitted_stop_words)
+
+tidy_test <- test %>%
+  mutate(doc_id = row_number()) %>%
+  unnest_tokens(word, cleaned_text, token = "words") %>%
+  filter(!word %in% splitted_stop_words)
+
+train_word_counts <- tidy_train %>% count(doc_id, word)
+train_dtm <- train_word_counts %>% cast_dtm(doc_id, word, n)
+X_train <- as.matrix(train_dtm)
+
+train_vocabulary <- colnames(X_train)
+
+test_dtm <- test_word_counts %>% cast_dtm(doc_id, word, n)
+X_test_raw <- as.matrix(test_dtm)
+
+X_test <- matrix(0, nrow = nrow(test), ncol = ncol(X_train))
+colnames(X_test) <- colnames(X_train)
+rownames(X_test) <- 1:nrow(test)
+matching_cols <- intersect(colnames(X_test_raw), colnames(X_train))
+X_test[as.integer(rownames(X_test_raw)), matching_cols] <- X_test_raw[, matching_cols]
+
+
+y_train <- ifelse(train[["Label"]] == "credible", 0, 1)
+y_test  <- ifelse(test[["Label"]] == "credible", 0, 1)
 ```
 
 ## Data visualization
