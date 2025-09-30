@@ -175,6 +175,58 @@ start processing it. R has very powerful tools to make nice plots and
 visualization. Show what are the most common words for negative and
 positive examples as a histogram, word cloud etc. Be creative!
 
+```{r}
+visualize_wordcloud <- function(data, class_name, stop_words) {
+  text_vector <- data$Body[data$Label == class_name]
+  
+  words <- unlist(strsplit(tolower(text_vector), "\\W"))
+
+  words <- words[!(words %in% stop_words)]
+  words <- words[nchar(words) > 1]
+  words <- words[!grepl("^[0-9]+$", words)]
+  words <- words[words != ""]
+  
+  word_freq <- sort(table(words), decreasing = TRUE)
+  
+  set.seed(123)
+  wordcloud(names(word_freq), freq = word_freq, max.words = 100, scale = c(3, 0.5),
+            colors = brewer.pal(8, "Dark2"))
+}
+
+
+visualize_barchart <- function(data, stop_words) {
+  df <- data.frame(
+    Label = rep(data$Label, sapply(strsplit(data$Body, "\\W"), length)),
+    word  = tolower(unlist(strsplit(data$Body, "\\W")))
+  )
+
+  df <- df %>% 
+    filter(!word %in% stop_words,
+           nchar(word) > 1,
+           !grepl("^[0-9]+$", word),
+           word != "")
+  
+  df_count <- df %>%
+    group_by(Label, word) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    group_by(Label) %>%
+    slice_max(n, n = 10)
+  
+  ggplot(df_count, aes(x = reorder(word, n), y = n, fill = Label)) +
+    geom_col(show.legend = FALSE) +
+    coord_flip() +
+    facet_wrap(~Label, scales = "free") +
+    labs(title = "The most common words in credible/fake news",
+         x = "Word", y = "Frequency")
+}
+
+visualize_wordcloud(train, "credible", stop_words)
+visualize_wordcloud(train, "fake", stop_words)
+
+visualize_barchart(train, stop_words)
+
+```
+
 ## Classifier implementation
 
 ```{r}
