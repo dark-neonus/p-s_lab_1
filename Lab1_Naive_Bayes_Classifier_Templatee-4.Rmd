@@ -146,12 +146,9 @@ library(tidyverse)
 ```{r}
 list.files(getwd())
 list.files("2-fake_news")
-list.files("2-fake_news")
 ```
 
 ```{r}
-test_path <- "2-fake_news/test.csv"
-train_path <- "2-fake_news/train.csv"
 test_path <- "2-fake_news/test.csv"
 train_path <- "2-fake_news/train.csv"
 
