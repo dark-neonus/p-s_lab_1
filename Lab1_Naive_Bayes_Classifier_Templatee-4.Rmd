@@ -185,20 +185,13 @@ tidy_test <- test %>%
   mutate(doc_id = row_number()) %>%
   unnest_tokens(word, cleaned_text, token = "words") %>%
   filter(!word %in% splitted_stop_words)
+```
+```{r}
 
 # Create word counts and document-term matrix for training data
 train_word_counts <- tidy_train %>% count(doc_id, word)
 
-# Filter out very rare words to reduce vocabulary size and improve performance
-word_frequencies <- train_word_counts %>% 
-  group_by(word) %>% 
-  summarise(total_count = sum(n), .groups = 'drop') %>%
-  filter(total_count >= 2)  # Keep words that appear at least 2 times
-
-train_word_counts_filtered <- train_word_counts %>% 
-  filter(word %in% word_frequencies$word)
-
-train_dtm <- train_word_counts_filtered %>% cast_dtm(doc_id, word, n)
+train_dtm <- train_word_counts %>% cast_dtm(doc_id, word, n)
 X_train_raw <- as.matrix(train_dtm)
 
 # Create full training matrix that includes all documents
