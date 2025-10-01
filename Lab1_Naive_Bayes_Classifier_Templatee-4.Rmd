@@ -427,10 +427,38 @@ cat("Result:", ifelse(prediction3 == y_test[3], "CORRECT", "WRONG"), "\n")
 Summarize your work by explaining in a few sentences the points listed
 below.
 
--   Describe the method implemented in general. Show what are
-    mathematical foundations you are basing your solution on.
--   List pros and cons of the method. This should include the
+-   **Describe the method implemented in general. Show what are
+    mathematical foundations you are basing your solution on.**
+
+    The implemented Naive Bayes classifier is a probabilistic machine learning algorithm based on Bayes' theorem with the "naive" assumption of conditional independence between features. The mathematical foundation relies on Bayes' formula:
+
+    $$\mathsf{P}(\mathrm{class} \mid \mathrm{observation}) = \frac{\mathsf{P}(\mathrm{observation} \mid \mathrm{class})\mathsf{P}(\mathrm{class})}{\mathsf{P}(\mathrm{observation})}$$
+
+    Under the independence assumption, this becomes:
+
+    $$\mathsf{P}(\mathrm{class} \mid \mathrm{observation}) = \mathsf{P}(\mathrm{class})\times \prod_{i=1}^{n}\frac{\mathsf{P}(\mathrm{feature}_i\mid \mathrm{class})}{\mathsf{P}(\mathrm{feature}_i)}$$
+
+    Our implementation calculates class probabilities P(class) and conditional word probabilities P(word|class) from training data, applies Laplace smoothing to handle unseen words, and uses logarithmic probabilities to prevent numerical underflow during computation.
+
+-   **List pros and cons of the method. This should include the
     limitations of your method, all the assumption you make about the
-    nature of your data etc.
+    nature of your data etc.**
+
+    **Pros:**
+    - Simple and computationally efficient algorithm
+    - Requires relatively small training datasets to estimate parameters
+    - Performs well with irrelevant features due to independence assumption
+    - Handles multi-class classification naturally
+    - Provides probabilistic predictions, not just classifications
+    - Works well with text classification tasks like fake news detection
+
+    **Cons and Limitations:**
+    - **Strong independence assumption**: Words in text are not actually independent (e.g., "New York" has dependent words)
+    - **Limited feature relationships**: Cannot capture interactions between words that might be important for context
+    - **Assumes bag-of-words representation**: Loses word order and sentence structure information
+    - **Sensitive to skewed data**: Performance can degrade with highly imbalanced datasets
+    - **Zero probability problem**: Without smoothing, unseen words would cause zero probabilities
+    - **Assumes features follow the same distribution**: May not hold for different types of text documents
+
 -   Explain why accuracy is not a good choice for the base metrics for
     classification tasks. Why F1 score is always preferable?
