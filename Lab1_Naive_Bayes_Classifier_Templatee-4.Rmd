@@ -261,57 +261,50 @@ naiveBayes <- setRefClass("naiveBayes",
                     # (binary classification task)
                     fit = function(X, y)
                     {
-                         # Ensure X and y have same length
-                         if (nrow(X) != length(y)) {
-                           stop("X and y must have the same number of samples")
-                         }
-                         
-                         cat("Starting training...\n")
-                         
-                         # Store classes and vocabulary
-                         classes <<- unique(y)
-                         vocabulary <<- colnames(X)
-                         
-                         cat("Classes:", classes, "\n")
-                         cat("Vocabulary size:", length(vocabulary), "\n")
-                         
-                         # Calculate class probabilities P(class)
-                         class_probs <<- sapply(classes, function(c) sum(y == c) / length(y))
-                         names(class_probs) <<- classes
-                         
-                         cat("Class probabilities calculated\n")
-                         
-                         # Calculate word probabilities P(word|class) for each class
-                         word_probs <<- list()
-                         
-                         for (class in classes) {
-                           cat("Processing class:", class, "\n")
-                           
-                           # Get indices of documents belonging to this class
-                           class_indices <- which(y == class)
-                           
-                           # Get documents belonging to this class
-                           if (length(class_indices) == 1) {
-                             class_docs <- matrix(X[class_indices, ], nrow = 1)
-                             colnames(class_docs) <- colnames(X)
-                           } else {
-                             class_docs <- X[class_indices, ]
-                           }
-                           
-                           # Calculate total word count for this class
-                           total_words <- sum(class_docs)
-                           
-                           # Calculate word frequencies for this class with Laplace smoothing
-                           word_counts <- colSums(class_docs)
-                           vocab_size <- length(vocabulary)
-                           
-                           # Apply Laplace smoothing: (count + 1) / (total + vocab_size)
-                           word_prob_class <- (word_counts + 1) / (total_words + vocab_size)
-                           
-                           word_probs[[as.character(class)]] <<- word_prob_class
-                         }
-                         
-                         cat("Training completed!\n")
+                        # Ensure X and y have same length
+                        if (nrow(X) != length(y)) {
+                            stop("X and y must have the same number of samples")
+                        }
+                        
+                        
+                        # Store classes and vocabulary
+                        classes <<- unique(y)
+                        vocabulary <<- colnames(X)
+                        
+                        # Calculate class probabilities P(class)
+                        class_probs <<- sapply(classes, function(c) sum(y == c) / length(y))
+                        names(class_probs) <<- classes
+                        
+                        
+                        # Calculate word probabilities P(word|class) for each class
+                        word_probs <<- list()
+                        
+                        for (class in classes) {
+                        
+                            # Get indices of documents belonging to this class
+                            class_indices <- which(y == class)
+                            
+                            # Get documents belonging to this class
+                            if (length(class_indices) == 1) {
+                                class_docs <- matrix(X[class_indices, ], nrow = 1)
+                                colnames(class_docs) <- colnames(X)
+                            } else {
+                                class_docs <- X[class_indices, ]
+                            }
+                            
+                            # Calculate total word count for this class
+                            total_words <- sum(class_docs)
+                            
+                            # Calculate word frequencies for this class with Laplace smoothing
+                            word_counts <- colSums(class_docs)
+                            vocab_size <- length(vocabulary)
+                            
+                            # Apply Laplace smoothing: (count + 1) / (total + vocab_size)
+                            word_prob_class <- (word_counts + 1) / (total_words + vocab_size)
+                            
+                            word_probs[[as.character(class)]] <<- word_prob_class
+                        }
+                        
                     },
                     
                     # return prediction for a single message 
@@ -354,52 +347,41 @@ naiveBayes <- setRefClass("naiveBayes",
                     # try how well your model generalizes to real world data! 
                     score = function(X_test, y_test)
                     {
-                         # Make predictions for all test samples (vectorized)
-                         cat("Making predictions...\n")
-                         predictions <- apply(X_test, 1, function(row) predict(row))
-                         
-                         # Calculate confusion matrix elements
-                         tp <- sum(predictions == 1 & y_test == 1)  # True positives
-                         tn <- sum(predictions == 0 & y_test == 0)  # True negatives  
-                         fp <- sum(predictions == 1 & y_test == 0)  # False positives
-                         fn <- sum(predictions == 0 & y_test == 1)  # False negatives
-                         
-                         # Calculate metrics
-                         accuracy <- (tp + tn) / length(y_test)
-                         precision <- ifelse(tp + fp == 0, 0, tp / (tp + fp))
-                         recall <- ifelse(tp + fn == 0, 0, tp / (tp + fn))
-                         f1 <- ifelse(precision + recall == 0, 0, 2 * precision * recall / (precision + recall))
-                         
-                         # Print results
-                         cat("Confusion Matrix:\n")
-                         cat("True Positives:", tp, "\n")
-                         cat("True Negatives:", tn, "\n") 
-                         cat("False Positives:", fp, "\n")
-                         cat("False Negatives:", fn, "\n\n")
-                         
-                         cat("Metrics:\n")
-                         cat("Accuracy:", round(accuracy, 4), "\n")
-                         cat("Precision:", round(precision, 4), "\n")
-                         cat("Recall:", round(recall, 4), "\n")
-                         cat("F1 Score:", round(f1, 4), "\n")
-                         
-                         # Return metrics as a list
-                         return(list(
-                           accuracy = accuracy,
-                           precision = precision,
-                           recall = recall,
-                           f1 = f1,
-                           predictions = predictions,
-                           confusion_matrix = matrix(c(tn, fp, fn, tp), nrow = 2, 
-                                                   dimnames = list(c("Actual 0", "Actual 1"), 
-                                                                 c("Predicted 0", "Predicted 1")))
-                         ))
                     }
 ))
-
+```
+```{r}
 model = naiveBayes()
 model$fit(X_train, y_train)
-results <- model$score(X_test, y_test)
+
+# Example predictions on individual test samples
+cat("\n=== EXAMPLE PREDICTIONS ===\n")
+
+# Example 1
+cat("Test sample 1:\n")
+cat("Input text:", test$Body[1], "\n")
+prediction1 <- model$predict(X_test[1, ])
+cat("Predicted class:", prediction1, "\n")
+cat("Actual class:", y_test[1], "\n")
+cat("Result:", ifelse(prediction1 == y_test[1], "CORRECT", "WRONG"), "\n\n")
+
+# Example 2
+cat("Test sample 2:\n")
+cat("Input text:", test$Body[2], "\n")
+prediction2 <- model$predict(X_test[2, ])
+cat("Predicted class:", prediction2, "\n")
+cat("Actual class:", y_test[2], "\n")
+cat("Result:", ifelse(prediction2 == y_test[2], "CORRECT", "WRONG"), "\n\n")
+
+# Example 3
+cat("Test sample 3:\n")
+cat("Input text:", test$Body[3], "\n")
+prediction3 <- model$predict(X_test[3, ])
+cat("Predicted class:", prediction3, "\n")
+cat("Actual class:", y_test[3], "\n")
+cat("Result:", ifelse(prediction3 == y_test[3], "CORRECT", "WRONG"), "\n")
+
+
 ```
 
 ## Measure effectiveness of your classifier
