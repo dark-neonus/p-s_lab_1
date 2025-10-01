@@ -192,6 +192,10 @@ X_train <- as.matrix(train_dtm)
 
 train_vocabulary <- colnames(X_train)
 
+test_word_counts <- tidy_test %>% 
+  count(doc_id, word) %>%
+  filter(word %in% train_vocabulary)
+
 test_dtm <- test_word_counts %>% cast_dtm(doc_id, word, n)
 X_test_raw <- as.matrix(test_dtm)
 
