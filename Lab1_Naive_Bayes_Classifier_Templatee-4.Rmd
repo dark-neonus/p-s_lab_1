@@ -586,5 +586,11 @@ below.
     - **Zero probability problem**: Without smoothing, unseen words would cause zero probabilities
     - **Assumes features follow the same distribution**: May not hold for different types of text documents
 
--   Explain why accuracy is not a good choice for the base metrics for
+-   **Explain why accuracy is not a good choice for the base metrics for
     classification tasks. Why F1 score is always preferable?
+
+    Accuracy is problematic for classification tasks, especially with imbalanced datasets. In such cases,
+    a classifier can achieve high accuracy simply by predicting the
+    majority class while failing to detect the minority one. The F1 score, as the harmonic mean
+    of precision(how many predicted fakes are actually fake) and recall(how many actual fakes are detected), provides a more balanced evaluation by
+    penalizing models that sacrifice one metric for the other. This makes F1 particularly valuable for imbalanced datasets
