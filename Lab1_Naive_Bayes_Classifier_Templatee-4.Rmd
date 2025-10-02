@@ -103,6 +103,8 @@ library(ggplot2)
 library(tm)
 library(stringr)
 library(tidyverse)
+library(wordcloud)
+library(reshape2)
 ```
 
 ## Outline of the work
@@ -393,6 +395,44 @@ naiveBayes <- setRefClass("naiveBayes",
                     # try how well your model generalizes to real world data! 
                     score = function(X_test, y_test)
                     {
+                      if (nrow(X_test) != length(y_test)) {
+                        stop("X_test and y_test must have the same number of samples")
+                      }
+                      
+                      y_test <- as.numeric(as.character(y_test))
+                      
+                      predictions <- numeric(nrow(X_test))
+                      for (i in 1:nrow(X_test)) {
+                        predictions[i] <- predict(matrix(X_test[i, , drop = FALSE], nrow = 1))
+                      }
+                      
+                      # metrics count
+                      TP <- sum(predictions == 1 & y_test == 1)
+                      TN <- sum(predictions == 0 & y_test == 0)
+                      FP <- sum(predictions == 1 & y_test == 0)
+                      FN <- sum(predictions == 0 & y_test == 1)
+                      
+                      accuracy <- (TP + TN) / (TP + TN + FP + FN)
+                      precision <- ifelse((TP + FP) > 0, TP / (TP + FP), 0) # Precision = TP / (TP+FP)
+                      recall <- ifelse((TP + FN) > 0, TP / (TP + FN), 0) # Recall = TP / (TP+FN)
+                      f1 <- ifelse((precision + recall) > 0, 2 * precision * recall / (precision + recall), 0) # F1 = 2PR / (P+R)
+
+                      cm <- matrix(c(TN, FP, FN, TP), nrow = 2,
+                                   dimnames = list(Actual = c("0","1"), Predicted = c("0","1")))
+                      
+                      cat("\n=== MODEL PERFORMANCE ===\n")
+                      cat("Accuracy :", round(accuracy, 3), "\n")
+                      cat("Precision:", round(precision, 3), "\n")
+                      cat("Recall   :", round(recall, 3), "\n")
+                      cat("F1 Score :", round(f1, 3), "\n")
+                      
+                      return(list(
+                        accuracy = accuracy,
+                        precision = precision,
+                        recall = recall,
+                        f1 = f1,
+                        confusion_matrix = cm
+                      ))
                     }
 ))
 ```
@@ -474,6 +514,39 @@ cat("Result:", ifelse(prediction3 == y_test[3], "CORRECT", "WRONG"), "\n")
 -   Visualize them.
 
 -   Show failure cases.
+
+```{r}
+results <- model$score(X_test, y_test)
+
+# --- Confusion Matrix Heatmap ---
+cm <- results$confusion_matrix
+class(cm)
+
+# data frame
+cm_df <- as.data.frame(as.table(cm))
+colnames(cm_df) <- c("Actual", "Predicted", "Freq")
+
+ggplot(cm_df, aes(x = Predicted, y = Actual, fill = Freq)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Freq), color = "white", size = 6) +
+  scale_fill_gradient(low = "steelblue", high = "darkblue") +
+  labs(title = "Confusion Matrix Heatmap") +
+  theme_minimal()
+
+metrics_df <- data.frame(
+  Metric = c("Accuracy", "Precision", "Recall", "F1 Score"),
+  Value = c(results$accuracy, results$precision, results$recall, results$f1)
+)
+
+ggplot(metrics_df, aes(x = Metric, y = Value, fill = Metric)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_text(aes(label = round(Value, 3)), vjust = -0.5) +
+  ylim(0, 1) +
+  labs(title = "Model Performance Metrics", y = "Score", x = "") +
+  theme_minimal()
+
+
+```
 
 ## Conclusions
 
